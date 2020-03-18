@@ -117,12 +117,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/circuit.py</url>
-          <line>134</line>
+          <line>135</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/circuit.py</url>
-          <line>133</line>
+          <line>134</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
