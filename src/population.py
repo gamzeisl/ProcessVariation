@@ -29,12 +29,13 @@ class Population:
         self.properties = {
             'N': N, 'p': p, 'o': o, 'transistor_count': transistor_count}
 
-    def set_Vth(self, sigma=None, mu=None):
+    def set_Vthchange(self, sigma=None, mu=None):
         """
         Assigns Vthchange values to every transistor in an individual
 
         :param sigma: deviation for gaussian
         :param mu: mean value for gaussian
+
         """
         pass
 
