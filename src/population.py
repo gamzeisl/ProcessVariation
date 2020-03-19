@@ -1,37 +1,8 @@
 import numpy as np
-import sobol_seq
 import os
 import control
 
-transistor_count = 6  # number of transistors
-p = 14  # number of variables
-N = 200  # number of population
-L = 130 * 1e-9
-o = 4  # number of output
-lower_bound = [L, L, L, L, L, L, L, L,
-               5 * L, 5 * L, 5 * L, 5 * L, 5 * L, 5 * L, 5 * L, 5 * L]
-upper_bound = [5 * L, 5 * L, 5 * L, 5 * L, 5 * L, 5 * L, 5 * L, 5 * L,
-               500 * L, 500 * L, 500 * L, 500 * L, 500 * L, 500 * L, 500 * L, 500 * L]
-
-circuit_name = 'amp'
-
-
-class Generation:
-    def __init__(self):
-        self.N = N
-        self.p = p
-        self.transistor_count = transistor_count
-        self.o = o
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        self.individuals = []
-
-    def population_initialize(self):
-        for _ in range(self.N):
-            qmc = sobol_seq.i4_sobol_generate(1, self.p)
-            dif_bound = (np.array(self.upper_bound) - np.array(self.lower_bound))
-            variable = list(np.multiply(dif_bound, qmc) + np.array(self.lower_bound))
-            self.individuals.append(Population(variable))
+from src import transistor_count, N, p, o, circuit_name
 
 
 class Population:
@@ -83,20 +54,12 @@ class Population:
         # write Vth changes to geo.txt file
         self._write_geo()
 
-        with open(path + 'designparam.cir', 'r') as f:
-            lines = f.readlines()
-            headers = []
-            for line in lines[1:]:
-                headers.append(line.split(' ')[1])
+        # write paramaters to param file
+        self._write_param()
 
-        with open(path + 'param.cir', 'w') as f:
-            f.write('.PARAM\n')
-            for header, parameter in zip(headers, self.parameters):
-                f.write('+ ' + header + ' = ' + str(parameter) + '\n')
-
+        # perform simulation
         os.system(
             'start/min/wait C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' + circuit_name + '.sp -o ' + circuit_name)
-        # os.chdir('../src')
 
         # read ma0 and parse gain, bw, himg, hreal, tmp
         self._read_ma0()
@@ -108,7 +71,21 @@ class Population:
         # Vdsat, beta, gm, gds, gmb
         self._read_dp0()
 
+    def _write_param(self):
+        """ Write parameters to param.cir file"""
+        with open('designparam.cir', 'r') as f:
+            lines = f.readlines()
+            headers = []
+            for line in lines[1:]:
+                headers.append(line.split(' ')[1])
+
+        with open('param.cir', 'w') as f:
+            f.write('.PARAM\n')
+            for header, parameter in zip(headers, self.parameters):
+                f.write('+ ' + header + ' = ' + str(parameter) + '\n')
+
     def _write_geo(self):
+        """ Write Vth changes to geo.txt file"""
         with open('geo.txt', 'w') as f:
             f.write('.PARAM\n')
             for i, elem in enumerate(self.Vthchange):
@@ -155,6 +132,8 @@ class Population:
         Vbs, Vth, Vdsat, beta, \
         gm, gds, gmb = [[0.00] * transistor_count] * 12
 
+        o_region = ['saturation'] * transistor_count
+
         with open(circuit_name + '.dp0', 'r') as f:
             lines = f.readlines()
 
@@ -183,11 +162,15 @@ class Population:
                     gds[transN - 1] = float(row_list[rowN + 15][colN])
                     gmb[transN - 1] = float(row_list[rowN + 16][colN])
 
-        self.t_values = {'Id': Id, 'Ibs': Ibs, 'Ibd': Ibd,
-                         'Vgs': Vgs, 'Vds': Vds, 'Vbs': Vbs,
-                         'Vth': Vth, 'Vdsat': Vdsat, 'beta': beta,
-                         'gm': gm, 'gds': gds, 'gmb': gmb}
+                    if Vgs[transN - 1] < Vth[transN - 1] - 0.05:
+                        o_region[transN - 1] = 'cutoff'
+                    elif Vds[transN - 1] < (Vgs[transN - 1] - Vth[transN - 1] - 0.05):
+                        o_region[transN - 1] = 'triode'
 
+        self.t_values = {'Id': Id, 'Ibs': Ibs, 'Ibd': Ibd, 'Vgs': Vgs,
+                         'Vds': Vds, 'Vbs': Vbs, 'Vth': Vth, 'Vdsat': Vdsat,
+                         'beta': beta, 'gm': gm, 'gds': gds, 'gmb': gmb,
+                         'o_region': o_region}
 
     @property
     def gainmag(self):
