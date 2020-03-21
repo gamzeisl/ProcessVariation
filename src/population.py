@@ -29,8 +29,8 @@ class Population:
         self.properties = {
             'p': p, 'o': o, 'transistor_count': transistor_count}
 
-    # def __repr__(self):
-    #     return self.parameters
+    def __repr__(self):
+        return ' , '.join([str(param) for param in self.parameters])
 
 
 
