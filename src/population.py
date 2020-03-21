@@ -2,7 +2,7 @@ import numpy as np
 import os
 import control
 
-from src import transistor_count, N, p, o, circuit_name
+from src import transistor_count, p, o, circuit_name
 
 
 class Population:
@@ -24,10 +24,15 @@ class Population:
                     f"but received {len(Vthchange)}")
             self.Vthchange = Vthchange
         else:
-            self.Vthchange = Vthchange if Vthchange else [0] * transistor_count
+            self.Vthchange = Vthchange if Vthchange else [0] * transistor_count * 2
 
         self.properties = {
-            'N': N, 'p': p, 'o': o, 'transistor_count': transistor_count}
+            'p': p, 'o': o, 'transistor_count': transistor_count}
+
+    # def __repr__(self):
+    #     return self.parameters
+
+
 
     def set_Vthchange(self, sigma=None, mu=None):
         """
@@ -72,9 +77,15 @@ class Population:
         # Vdsat, beta, gm, gds, gmb
         self._read_dp0()
 
+        if all([region == 'saturation'
+                    for region in self.t_values['o_region']]):
+            self.saturation = True
+        else:
+            self.saturation = False
+
     def _write_param(self):
         """ Write parameters to param.cir file"""
-        with open('designparam.cir', 'r') as f:
+        with open('param.cir', 'r') as f:
             lines = f.readlines()
             headers = []
             for line in lines[1:]:
@@ -119,9 +130,9 @@ class Population:
         with open(circuit_name + '.mt0', 'r') as f:
             lines = f.readlines()
         lines_list = lines[3].split()
-        self.power = lines_list[0]
-        self.area = lines_list[1]
-        self.temper = lines_list[2]
+        self.power = float(lines_list[0])
+        self.area = float(lines_list[1])
+        self.temper = float(lines_list[2])
 
     def _read_dp0(self):
         """
@@ -129,9 +140,19 @@ class Population:
         Vdsat, beta, gm, gds, gmb for each transistor
 
         """
-        Id, Ibs, Ibd, Vgs, Vds, \
-        Vbs, Vth, Vdsat, beta, \
-        gm, gds, gmb = [[0.00] * transistor_count] * 12
+        Id = [0] * transistor_count
+        Ibs = [0] * transistor_count
+        Ibd = [0] * transistor_count
+        Vgs = [0] * transistor_count
+        Vds = [0] * transistor_count
+        Vbs = [0] * transistor_count
+        Vth = [0] * transistor_count
+        Vdsat = [0] * transistor_count
+        beta = [0] * transistor_count
+        gm = [0] * transistor_count
+        gds = [0] * transistor_count
+        gmb = [0] * transistor_count
+
 
         o_region = ['saturation'] * transistor_count
 
@@ -175,8 +196,10 @@ class Population:
 
     @property
     def gainmag(self):
-        return control.db2mag(self.gaindb)
-
+        if hasattr(self, 'gaindb'):
+            return control.db2mag(self.gaindb)
+        else:
+            return None
     @staticmethod
     def db2mag(x):
         return control.db2mag(x)
@@ -186,6 +209,7 @@ class Population:
         return control.mag2db(x)
 
 
-if __name__ == '__main__':
-    a = Population([1, 2, 3, 4, 5, 6])
-    a.simulate()
+# if __name__ == '__main__':
+#     a = Population([1, 2, 3, 4, 5, 6])
+#     a.simulate()
+#     pass
