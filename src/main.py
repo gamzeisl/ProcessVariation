@@ -27,7 +27,7 @@ while kii < gen_number:
     generation.simulate()
     generation.plot_scatter(gaintype='mag', color=randrange(3))
 
-    generation.fitness2(generations.gens[-1])
+    generation.fitness2(generations.gens[-1], kii)
 
     generation.enviromental1()
 

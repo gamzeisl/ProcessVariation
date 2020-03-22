@@ -7,7 +7,7 @@ import time
 
 from matplotlib import pyplot as plt
 from datetime import datetime
-from random import randrange, uniform, choice
+from random import randrange, uniform
 
 from . import transistor_count, N, p, o, d, \
     lower_bound, upper_bound, min_pm, max_area, max_power
@@ -19,6 +19,7 @@ class Generation:
         self.individuals = []
         self.properties = {
             'N': N, 'p': p, 'o': o, 'transistor_count': transistor_count,
+            'max_area': max_area, 'max_power': max_power, 'min_pm': min_pm,
             'lower_bound': lower_bound, 'upper_bound': upper_bound}
         self.archive_inds = []
         self.sat_individuals = []
@@ -66,6 +67,7 @@ class Generation:
         time.sleep(1)
 
     def fitness1(self):
+        """ Assign fitness values to the first generation"""
         bw_normalize = 10e+3
         gain_normalize = 1
         self.calculate_error()
@@ -92,15 +94,114 @@ class Generation:
                 ind.f_values['rawfitness'] / max(rawfitnesses) + \
                 ind.f_values['total_error'] * 20 + 1 / (ind.f_values.get('distance')[d] + 2)
 
-    def fitness2(self, before_gen):
+    def fitness2(self, before_generation, kii):
+        """ Assign fitness values to the generation except the first."""
         bw_normalize = 10e+3
         gain_normalize = 1
         self.calculate_error()
+
         archive_pm_error = [0] * N
         archive_power_error = [0] * N
         archive_area_error = [0] * N
-        #TODO write fitness2 and enviromental2
-        # for i in
+        for i, arch_ind_before in enumerate(
+                before_generation.archive_inds):
+
+            if arch_ind_before.pm < min_pm:
+                archive_pm_error[i] = abs(min_pm - arch_ind_before.pm) / min_pm
+            if arch_ind_before.power > max_power:
+                archive_power_error[i] = abs(arch_ind_before.power - max_power) / max_power
+            if arch_ind_before.area > max_area:
+                archive_area_error[i] = abs(arch_ind_before.area - max_area) / max_area
+
+            self.individuals[i].f_archive_values['total_error'] = \
+                archive_pm_error[i] + archive_power_error[i] + archive_area_error[i]
+
+        # Assign strength values to new generation
+        for ind1 in self.individuals:
+            for j, ind2 in enumerate(self.individuals):
+
+                if ind1.bw > ind2.bw and ind1.gaindb > ind2.gaindb:
+                    ind1.f_values['strength'] += 1
+
+                if ind1.bw > before_generation.archive_inds[j].bw and \
+                        ind1.gain > before_generation.archive_inds[j].gaindb:
+                    ind1.f_values['strength'] += 1
+
+        # Assign strength values to archive
+        for i, arch_ind_before in enumerate(before_generation.archive_inds):
+            for j, ind in enumerate(self.individuals):
+
+                if arch_ind_before.bw > ind.bw and arch_ind_before.gaindb > ind.gaindb:
+                    self.individuals[i].f_archive_values['strength'] += 1
+
+                if arch_ind_before.bw > before_generation.archive_inds[j].bw and \
+                        arch_ind_before.gaindb > before_generation.archive_inds[j].gaindb:
+                    self.individuals[i].f_archive_values['strength'] += 1
+
+        # Assign rawfitness values to new generation
+        for ind1 in self.individuals:
+            for j, ind2 in enumerate(self.individuals):
+
+                if ind1.bw < ind2.bw and ind1.gaindb < ind2.gaindb:
+                    ind1.f_values['rawfitness'] += ind2.f_values['strength']
+
+                if ind1.bw < before_generation.archive_inds[j].bw and \
+                        ind1.gaindb < before_generation.archive_inds[j].gaindb:
+                    ind1.f_values['rawfitness'] += \
+                        ind2.f_archive_values['strength']
+
+        # Assign rawfitness values to archive
+        for i, arch_ind_before in enumerate(before_generation.archive_inds):
+            for j, ind in enumerate(self.individuals):
+
+                if arch_ind_before.bw < ind.bw and arch_ind_before.gaindb < ind.gaindb:
+                    self.individuals[i].f_archive_values['rawfitness'] += \
+                        ind.f_values['strength']
+
+                if arch_ind_before.bw < before_generation.archive_inds[j].bw and \
+                        arch_ind_before.gaindb < before_generation.archive_inds[j].gaindb:
+                    self.individuals[i].f_archive_values['rawfitness'] += \
+                        ind.f_archive_values['strength']
+
+        for ind in self.individuals:
+
+            # Calculate distance values
+            for j, arch_ind_before in enumerate(before_generation.archive_inds):
+                ind.f_values.get('distance')[j] = math.sqrt(
+                    ((ind.bw - arch_ind_before.bw) / bw_normalize) ** 2 +
+                    ((ind.gaindb - arch_ind_before.gaindb) / gain_normalize) ** 2)
+                ind.f_archive_values['distance'][j] = math.sqrt(
+                    ((arch_ind_before.bw - before_generation.archive_inds[j].bw) / bw_normalize) ** 2 +
+                    ((arch_ind_before.gaindb - before_generation.archive_inds[j].gaindb) / gain_normalize) ** 2)
+
+            all_rawfitness = [ind.f_values['rawfitness']
+                              for ind in self.individuals]
+
+            all_archive_rawfitness = [ind.f_archive_values['rawfitness']
+                                      for ind in self.individuals]
+
+            ind.f_values['distance'].sort()
+
+            # normalize rawfitness and add error to generation
+            if max(all_rawfitness) != 0:
+                ind.f_values['fitness'] = ind.f_values['rawfitness'] / max(all_rawfitness) \
+                                          + ind.f_values['total_error'] * (20 + (kii ** 4) * 1e-8) \
+                                          + 0.1 / (ind.f_values['distance'][d] + 2)
+            else:
+                ind.f_values['fitness'] = ind.f_values['total_error'] * (20 + (kii ** 4) * 1e-8) \
+                                          + 0.1 / (ind.f_values['distance'][d] + 2)
+
+            # normalize rawfitness and add error to archive
+            if max(all_archive_rawfitness) != 0:
+                ind.f_archive_values['fitness'] = ind.f_archive_values['rawfitness'] / max(all_archive_rawfitness) \
+                                                  + ind.f_archive_values['total_error'] * (20 + (kii ** 4) * 1e-8) \
+                                                  + 0.1 / (ind.f_archive_values['distance'][d] + 2)
+            else:
+                ind.f_archive_values['fitness'] = ind.f_archive_values['total_error'] * (20 + (kii ** 4) * 1e-8) \
+                                                  + 0.1 / (ind.f_archive_values['distance'][d] + 2)
+
+
+
 
     def calculate_error(self):
 
@@ -109,9 +210,6 @@ class Generation:
         area_error = [0] * N
 
         for i, ind in enumerate(self.individuals):
-            ind.f_values = {'total_error': 0, 'strength': 0,
-                            'rawfitness': 0, 'distance': [0] * N,
-                            'fitness': 0}
             if ind.pm < min_pm:
                 pm_error[i] = abs(min_pm - ind.pm) / min_pm
 
@@ -123,12 +221,6 @@ class Generation:
 
             ind.f_values['total_error'] = \
                 pm_error[i] + power_error[i] + area_error[i]
-
-
-
-
-
-
 
     def enviromental1(self):
 
@@ -286,5 +378,3 @@ class Generations:
             with open(file_name, 'w') as f:
                 data = self.gens[start:stop + 1]
                 pickle.dumps(data, f)
-
-

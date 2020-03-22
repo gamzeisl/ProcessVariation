@@ -2,7 +2,7 @@ import numpy as np
 import os
 import control
 
-from src import transistor_count, p, o, circuit_name
+from src import transistor_count, p, o, circuit_name, N
 
 
 class Population:
@@ -29,10 +29,16 @@ class Population:
         self.properties = {
             'p': p, 'o': o, 'transistor_count': transistor_count}
 
+        self.f_values = {'total_error': 0, 'strength': 0,
+                         'rawfitness': 0, 'distance': [0] * N,
+                         'fitness': 0}
+
+        self.f_archive_values = {'total_error': 0, 'strength': 0,
+                                 'rawfitness': 0, 'distance': [0] * N,
+                                 'fitness': 0}
+
     def __repr__(self):
         return ' , '.join([str(param) for param in self.parameters])
-
-
 
     def set_Vthchange(self, sigma=None, mu=None):
         """
@@ -68,6 +74,7 @@ class Population:
             'start/min/wait C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' + circuit_name + '.sp -o ' + circuit_name)
 
         # read ma0 and parse gain, bw, himg, hreal, tmp
+
         self._read_ma0()
 
         # read ma0 and parse power, area, temper
@@ -78,7 +85,7 @@ class Population:
         self._read_dp0()
 
         if all([region == 'saturation'
-                    for region in self.t_values['o_region']]):
+                for region in self.t_values['o_region']]):
             self.saturation = True
         else:
             self.saturation = False
@@ -140,19 +147,18 @@ class Population:
         Vdsat, beta, gm, gds, gmb for each transistor
 
         """
-        Id = [0] * transistor_count
-        Ibs = [0] * transistor_count
-        Ibd = [0] * transistor_count
-        Vgs = [0] * transistor_count
-        Vds = [0] * transistor_count
-        Vbs = [0] * transistor_count
-        Vth = [0] * transistor_count
-        Vdsat = [0] * transistor_count
-        beta = [0] * transistor_count
-        gm = [0] * transistor_count
-        gds = [0] * transistor_count
-        gmb = [0] * transistor_count
-
+        Id = [0.00] * transistor_count
+        Ibs = [0.00] * transistor_count
+        Ibd = [0.00] * transistor_count
+        Vgs = [0.00] * transistor_count
+        Vds = [0.00] * transistor_count
+        Vbs = [0.00] * transistor_count
+        Vth = [0.00] * transistor_count
+        Vdsat = [0.00] * transistor_count
+        beta = [0.00] * transistor_count
+        gm = [0.00] * transistor_count
+        gds = [0.00] * transistor_count
+        gmb = [0.00] * transistor_count
 
         o_region = ['saturation'] * transistor_count
 
@@ -200,6 +206,7 @@ class Population:
             return control.db2mag(self.gaindb)
         else:
             return None
+
     @staticmethod
     def db2mag(x):
         return control.db2mag(x)
@@ -207,7 +214,6 @@ class Population:
     @staticmethod
     def mag2db(x):
         return control.mag2db(x)
-
 
 # if __name__ == '__main__':
 #     a = Population([1, 2, 3, 4, 5, 6])
