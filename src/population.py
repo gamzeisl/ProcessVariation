@@ -2,7 +2,8 @@ import numpy as np
 import os
 import control
 
-from src import transistor_count, p, o, circuit_name, N
+# from src import transistor_count, p, o, circuit_name, N
+from CircuitFiles import *
 
 
 class Population:
@@ -32,10 +33,6 @@ class Population:
         self.f_values = {'total_error': 0, 'strength': 0,
                          'rawfitness': 0, 'distance': [0] * N,
                          'fitness': 0}
-
-        self.f_archive_values = {'total_error': 0, 'strength': 0,
-                                 'rawfitness': 0, 'distance': [0] * N,
-                                 'fitness': 0}
 
     def __repr__(self):
         return ' , '.join([str(param) for param in self.parameters])
@@ -118,8 +115,8 @@ class Population:
 
         self.bw = abs(float(lines_list[0]))
         self.gaindb = abs(float(lines_list[1]))
-        himg = float(lines_list[2])
-        hreal = float(lines_list[3])
+        himg = 0.0 if lines_list[2] == 'failed' else float(lines_list[2])
+        hreal = 0.0 if lines_list[3] == 'failed' else float(lines_list[3])
 
         if himg > 0 and hreal > 0:
             self.pm = np.arctan(himg / hreal) * 180 / np.pi

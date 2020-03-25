@@ -1,4 +1,4 @@
 DATA1 SOURCE='HSPICERF' VERSION='A-2008.03'
 .TITLE '**aaaa'
  zpower zsarea temper alter#
-  1.081980e-003	  1.713182e-010	     25.000000 1
+  9.448121e-004	  3.725863e-010	     25.000000 1

@@ -1,6 +1,5 @@
-from src.generation import Generations, Generation
-from src import gen_number, N
-from random import randrange
+from CircuitFiles import gen_number, N
+from generation import Generations, Generation
 
 kii = 0
 generations = Generations()  # form a generations object
@@ -10,8 +9,8 @@ generation = Generation(N)  # form a generation with N individuals
 generation.population_initialize()
 generation.simulate()
 generation.plot_scatter(gaintype='mag', color='b')
-generation.fitness1()
-generation.enviromental1()
+generation.fitness_first()
+generation.enviromental_first()
 
 # append it to generations class
 generations.append(generation)
@@ -25,9 +24,17 @@ generation = Generation.new_generation(crossed_parameters, N)
 
 while kii < gen_number:
     generation.simulate()
-    generation.plot_scatter(gaintype='mag', color=randrange(3))
+    generation.plot_scatter(gaintype='mag', color='alternate')
 
-    generation.fitness2(generations.gens[-1], kii)
+    archive_fitness, archive_distance, \
+        archive_rawfitness, archive_total_error = generation.fitness(generations.gens[-1], kii)
 
-    generation.enviromental1()
+    generation.enviromental(generations.gens[-1], archive_fitness,
+                            archive_distance, archive_rawfitness,
+                            archive_total_error)
 
+    generations.append(generation)
+    matingpool = generation.mating()
+    crossed_parameters = generation.cross_mutation(matingpool)
+    generation = Generation.new_generation(crossed_parameters, N)
+    kii += 1
