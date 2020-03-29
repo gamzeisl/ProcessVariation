@@ -4,6 +4,7 @@ import pickle
 import os
 import math
 import time
+import itertools
 
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -205,11 +206,11 @@ class Generation:
             # normalize rawfitness and add error to archive
             if max(relative_rawfitness) != 0:
                 relative_fitness[i] = relative_rawfitness[i] / max(relative_rawfitness) \
-                                     + relative_total_error[i] * (20 + (kii ** 4) * 1e-8) \
-                                     + 0.1 / (relative_distance[i][d] + 2)
+                                      + relative_total_error[i] * (20 + (kii ** 4) * 1e-8) \
+                                      + 0.1 / (relative_distance[i][d] + 2)
             else:
                 relative_fitness[i] = relative_total_error[i] * (20 + (kii ** 4) * 1e-8) \
-                                     + 0.1 / (relative_distance[i][d] + 2)
+                                      + 0.1 / (relative_distance[i][d] + 2)
 
         # These are the values of the before
         # generation relative to the current generation
@@ -254,8 +255,7 @@ class Generation:
             del self.archive_inds[-1]
             # TODO add truncate
 
-
-            #TODO düzelt burda buglar var
+            # TODO düzelt burda buglar var
     def enviromental(self, before_generation, archive_fitness,
                      archive_distance, archive_rawfitness,
                      archive_total_error):
@@ -268,7 +268,8 @@ class Generation:
                 if ind.bw == arch_ind_before.bw and ind.gaindb == arch_ind_before.gaindb:
                     flag1[i] = True
                 if before_generation.archive_inds[i].bw == arch_ind_before.bw and \
-                        before_generation.archive_inds[i].gaindb == arch_ind_before.gaindb:
+                        before_generation.archive_inds[i].gaindb == arch_ind_before.gaindb and \
+                            i != j:
                     flag2[i] = True
 
         archive_inds_temp = []
@@ -278,7 +279,8 @@ class Generation:
                     archive_inds_temp.append(ind)
             if archive_rawfitness[i] == 0 and \
                     archive_total_error[i] == 0:
-                archive_inds_temp.append(before_generation.archive_inds[i])
+                if not flag2[i]:
+                    archive_inds_temp.append(before_generation.archive_inds[i])
 
         all_fitness_temp = [ind.f_values['fitness']
                             for ind in self.individuals] + archive_fitness
@@ -365,8 +367,6 @@ class Generation:
             ind_child2 = recombination_coefficient[i] * np.array(matingpool[p2].parameters) + \
                          ((1 - recombination_coefficient[i]) * np.array(matingpool[p1].parameters))
             child_parameters.append(ind_child2.tolist())
-
-            child_parameters = (lambda x: list(set(x)))(child_parameters)
 
         mutation = [True if uniform(0, 1) > mut else False
                     for mut in mutationStepSize]
