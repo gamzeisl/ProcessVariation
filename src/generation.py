@@ -25,16 +25,18 @@ class Generation:
         self.sat_individuals = []
 
     def population_initialize(self):
-        qmc = sobol_seq.i4_sobol_generate(self.properties['p'],
-                                          self.properties['N'])
+        # qmc = sobol_seq.i4_sobol_generate(self.properties['p'],
+        #                                   self.properties['N'])
+
         dif_bound = (np.array(self.properties['upper_bound']) -
                      np.array(self.properties['lower_bound']))
 
-        variable = np.multiply(qmc, dif_bound) + \
-                   np.array(self.properties['lower_bound'])
+        # variable = np.multiply(qmc, dif_bound) + \
+        #            np.array(self.properties['lower_bound'])
 
         variable = np.multiply(dif_bound, np.random.rand(self.properties['N'], self.properties['p'])) \
                    + np.array(self.properties['lower_bound'])
+
         for var in variable:
             self.individuals.append(Population(var.tolist()))
 
@@ -55,21 +57,26 @@ class Generation:
             if ind.saturation:
                 self.sat_individuals.append(ind)
 
-    def plot_scatter(self, gaintype: str = None, color='b'):
+    def plot_scatter_arch(self, gaintype: str = None, color='b', gen=None):
         """ Plot the generation """
         if gaintype == 'db':
-            gain = [ind.gaindb for ind in self.individuals]
+            gain = [ind.gaindb for ind in self.archive_inds]
         elif gaintype == 'mag':
-            gain = [ind.gainmag for ind in self.individuals]
+            gain = [ind.gainmag for ind in self.archive_inds]
         else:
             raise ValueError(f"gaintype should be db or mag")
 
-        bw = [ind.bw for ind in self.individuals]
+        bw = [ind.bw for ind in self.archive_inds]
 
         if color == 'alternate':
             color = np.random.rand(3, )
 
-        plt.scatter(bw, gain, color=color)
+        if gen:
+            plt.scatter(bw, gain, color=color, label=str(gen))
+            plt.legend(loc='upper right', numpoints=1, ncol=5, fontsize=5)
+        else:
+            plt.scatter(bw, gain, color=color)
+
         plt.draw()
         plt.pause(0.001)
 
@@ -85,6 +92,7 @@ class Generation:
 
                 if ind1.bw > ind2.bw and ind1.gaindb > ind2.gaindb:
                     ind1.f_values['strength'] += 1
+
                 elif ind1.bw < ind2.bw and ind1.gaindb < ind2.gaindb:
                     ind1.f_values['rawfitness'] += 1
 
@@ -113,8 +121,7 @@ class Generation:
         relative_power_error = [0.0] * N
         relative_area_error = [0.0] * N
         relative_total_error = [0.0] * N
-        for i, arch_ind_before in enumerate(
-                before_generation.archive_inds):
+        for i, arch_ind_before in enumerate(before_generation.archive_inds):
 
             if arch_ind_before.pm < min_pm:
                 relative_pm_error[i] = abs(min_pm - arch_ind_before.pm) / min_pm
@@ -139,7 +146,7 @@ class Generation:
 
         relative_strength = [0.00] * N
         # Assign strength values to archive
-        for i, arch_ind_before in enumerate(before_generation.archive_inds[:N]):
+        for i, arch_ind_before in enumerate(before_generation.archive_inds):
             for j, ind in enumerate(self.individuals):
 
                 if arch_ind_before.bw > ind.bw and arch_ind_before.gaindb > ind.gaindb:
@@ -162,7 +169,7 @@ class Generation:
 
         relative_rawfitness = [0.00] * N
         # Assign rawfitness values to archive
-        for i, arch_ind_before in enumerate(before_generation.archive_inds[:N]):
+        for i, arch_ind_before in enumerate(before_generation.archive_inds):
             for j, ind in enumerate(self.individuals):
 
                 if arch_ind_before.bw < ind.bw and arch_ind_before.gaindb < ind.gaindb:
@@ -177,7 +184,7 @@ class Generation:
         for i, ind in enumerate(self.individuals):
 
             # Calculate distance values
-            for j, arch_ind_before in enumerate(before_generation.archive_inds[:N]):
+            for j, arch_ind_before in enumerate(before_generation.archive_inds):
                 ind.f_values['distance'][j] = math.sqrt(
                     ((ind.bw - arch_ind_before.bw) / bw_normalize) ** 2 +
                     ((ind.gaindb - arch_ind_before.gaindb) / gain_normalize) ** 2)
@@ -218,9 +225,9 @@ class Generation:
 
     def calculate_error(self):
 
-        pm_error = [0] * N
-        power_error = [0] * N
-        area_error = [0] * N
+        pm_error = [0.0] * N
+        power_error = [0.0] * N
+        area_error = [0.0] * N
 
         for i, ind in enumerate(self.individuals):
             if ind.pm < min_pm:
@@ -238,8 +245,7 @@ class Generation:
     def enviromental_first(self):
 
         for ind in self.individuals:
-            if (ind.f_values['rawfitness'] == 0 and
-                    ind.f_values['total_error'] == 0):
+            if ind.f_values['rawfitness'] == 0 and ind.f_values['total_error'] == 0:
                 self.archive_inds.append(ind)
 
         sorted_inds = sorted(self.individuals,
@@ -247,45 +253,43 @@ class Generation:
 
         while len(self.archive_inds) < N:
             for ind in sorted_inds:
-                if ind.f_values['rawfitness'] > 0 and \
-                        ind.f_values['total_error'] > 0:
+                if ind not in self.archive_inds:
                     self.archive_inds.append(ind)
+                # if ind.f_values['rawfitness'] > 0 and ind.f_values['total_error'] > 0:
 
-        while len(self.archive_inds) > N:
-            del self.archive_inds[-1]
-            # TODO add truncate
-
-            # TODO düzelt burda buglar var
     def enviromental(self, before_generation, archive_fitness,
                      archive_distance, archive_rawfitness,
                      archive_total_error):
-        flag1 = [False] * N
-        flag2 = [False] * N
-
-        # Avoid duplication
-        for i, ind in enumerate(self.individuals):
-            for j, arch_ind_before in enumerate(before_generation.archive_inds):
-                if ind.bw == arch_ind_before.bw and ind.gaindb == arch_ind_before.gaindb:
-                    flag1[i] = True
-                if before_generation.archive_inds[i].bw == arch_ind_before.bw and \
-                        before_generation.archive_inds[i].gaindb == arch_ind_before.gaindb and \
-                            i != j:
-                    flag2[i] = True
+        # flag1 = [False] * N
+        # flag2 = [False] * N
+        #
+        # # Avoid duplication
+        # for i, ind in enumerate(self.individuals):
+        #     for j, arch_ind_before in enumerate(before_generation.archive_inds):
+        #         if ind.bw == arch_ind_before.bw and ind.gaindb == arch_ind_before.gaindb:
+        #             flag1[i] = True
+        #         if before_generation.archive_inds[i].bw == arch_ind_before.bw and \
+        #                 before_generation.archive_inds[i].gaindb == arch_ind_before.gaindb and \
+        #                 i != j:
+        #             flag2[i] = True
 
         archive_inds_temp = []
         for i, ind in enumerate(self.individuals):
+
             if ind.f_values['rawfitness'] == 0 and ind.f_values['total_error'] == 0:
-                if not flag1[i]:
+                if ind not in archive_inds_temp:
                     archive_inds_temp.append(ind)
-            if archive_rawfitness[i] == 0 and \
-                    archive_total_error[i] == 0:
-                if not flag2[i]:
+
+            if archive_rawfitness[i] == 0 and archive_total_error[i] == 0:
+                if before_generation.archive_inds[i] not in archive_inds_temp:
                     archive_inds_temp.append(before_generation.archive_inds[i])
 
         all_fitness_temp = [ind.f_values['fitness']
                             for ind in self.individuals] + archive_fitness
+
         all_rawfitness_temp = [ind.f_values['rawfitness']
                                for ind in self.individuals] + archive_rawfitness
+
         all_total_error_temp = [ind.f_values['total_error']
                                 for ind in self.individuals] + archive_total_error
 
@@ -293,31 +297,50 @@ class Generation:
                          key=lambda k: all_fitness_temp[k])
 
         all_fitness_temp, all_rawfitness_temp, all_total_error_temp = zip(
-            *sorted(zip(all_fitness_temp, all_rawfitness_temp, all_total_error_temp)))
+            *sorted(zip(all_fitness_temp, all_rawfitness_temp, all_total_error_temp), key=lambda x: x[0]))
 
         if len(archive_inds_temp) < N:
 
             i = 0
+            # try:
             while len(archive_inds_temp) < N:
-
-                if all_rawfitness_temp[i] > 0 or all_total_error_temp[i] > 0:
-                    if indexes[i] < N:
-                        if not flag1[indexes[i]]:
-                            archive_inds_temp.append(self.individuals[indexes[i]])
-                    else:
-                        if not flag2[indexes[i] - N]:
-                            archive_inds_temp.append(
-                                before_generation.archive_inds[indexes[i] - N])
+                if indexes[i] < N:
+                    # if not flag1[indexes[i]]:
+                    if self.individuals[indexes[i]] not in archive_inds_temp:
+                        archive_inds_temp.append(self.individuals[indexes[i]])
+                else:
+                    # if not flag2[indexes[i] - N]:
+                    if before_generation.archive_inds[indexes[i] - N] not in archive_inds_temp:
+                        archive_inds_temp.append(
+                            before_generation.archive_inds[indexes[i] - N])
                 i += 1
-            self.archive_inds[:] = archive_inds_temp[:]
+            # except IndexError:
+            #     i = 0
+            #     while len(archive_inds_temp) < N:
+            #         if indexes[i] < N:
+            #             if not flag1[indexes[i]] and self.individuals[indexes[i]] not in archive_inds_temp:
+            #                 archive_inds_temp.append(self.individuals[indexes[i]])
+            #         else:
+            #             if not flag2[indexes[i] - N] and \
+            #                     before_generation.archive_inds[indexes[i] - N] not in archive_inds_temp:
+            #                 archive_inds_temp.append(
+            #                     before_generation.archive_inds[indexes[i] - N])
+            #         i += 1
+
+            self.archive_inds = archive_inds_temp[:]
 
         elif len(archive_inds_temp) > N:
             while len(archive_inds_temp) > N:
                 del archive_inds_temp[-1]
             # self.truncate()
-            self.archive_inds[:] = archive_inds_temp[:]
+            self.archive_inds = archive_inds_temp[:]
         else:
-            self.archive_inds[:] = archive_inds_temp[:]
+            self.archive_inds = archive_inds_temp[:]
+
+
+    def truncate(self):
+        pass
+
 
     def mating(self):
 
@@ -349,7 +372,7 @@ class Generation:
     def cross_mutation(self, matingpool):
 
         recombination_coefficient = [0.8] * N
-        mutationStepSize = [0.1 + 0.2 * uniform(0, 1)
+        mutationStepSize = [0.1 + 0.1 * uniform(0, 1)
                             for _ in range(N)]
 
         child_parameters = []
@@ -411,28 +434,28 @@ class Generations:
             self.all_inds.append(ind)
             if ind.saturation:
                 self.saturation_inds.append(ind)
-
-        if len(self.gens) == 1:
-            self.archive_parameters.append([ind.parameters
-                                            for ind in generation.archive_inds])
-            self.archive_bw.append([ind.bw
-                                    for ind in generation.archive_inds])
-            self.archive_gaindb.append([ind.gaindb
-                                        for ind in generation.archive_inds])
-            self.archive_gainmag.append([ind.gainmag
-                                         for ind in generation.archive_inds])
-            self.archive_pm.append([ind.pm
-                                    for ind in generation.archive_inds])
-            self.archive_power.append([ind.power
-                                       for ind in generation.archive_inds])
-            self.archive_area.append([ind.area
-                                      for ind in generation.archive_inds])
-            self.archive_fitness.append([ind.f_values['fitness']
-                                         for ind in generation.archive_inds])
-            self.archive_rawfitness.append([ind.f_values['rawfitness']
-                                            for ind in generation.archive_inds])
-            self.archive_total_error.append([ind.f_values['total_error']
-                                             for ind in generation.archive_inds])
+        #
+        # if len(self.gens) == 1:
+        #     self.archive_parameters.append([ind.parameters
+        #                                     for ind in generation.archive_inds])
+        #     self.archive_bw.append([ind.bw
+        #                             for ind in generation.archive_inds])
+        #     self.archive_gaindb.append([ind.gaindb
+        #                                 for ind in generation.archive_inds])
+        #     self.archive_gainmag.append([ind.gainmag
+        #                                  for ind in generation.archive_inds])
+        #     self.archive_pm.append([ind.pm
+        #                             for ind in generation.archive_inds])
+        #     self.archive_power.append([ind.power
+        #                                for ind in generation.archive_inds])
+        #     self.archive_area.append([ind.area
+        #                               for ind in generation.archive_inds])
+        #     self.archive_fitness.append([ind.f_values['fitness']
+        #                                  for ind in generation.archive_inds])
+        #     self.archive_rawfitness.append([ind.f_values['rawfitness']
+        #                                     for ind in generation.archive_inds])
+        #     self.archive_total_error.append([ind.f_values['total_error']
+        #                                      for ind in generation.archive_inds])
 
     def plot(self, start, stop):
         pass

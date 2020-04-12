@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import control
+from matplotlib import pyplot as plt
 
-# from src import transistor_count, p, o, circuit_name, N
 from CircuitFiles import *
 
 
@@ -27,12 +27,14 @@ class Population:
         else:
             self.Vthchange = Vthchange if Vthchange else [0] * transistor_count * 2
 
+        self.topology = topology
+
         self.properties = {
             'p': p, 'o': o, 'transistor_count': transistor_count}
 
-        self.f_values = {'total_error': 0, 'strength': 0,
-                         'rawfitness': 0, 'distance': [0] * N,
-                         'fitness': 0}
+        self.f_values = {'total_error': 0.0, 'strength': 0.0,
+                         'rawfitness': 0.0, 'distance': [0.0] * N,
+                         'fitness': 0.0}
 
     def __repr__(self):
         return ' , '.join([str(param) for param in self.parameters])
@@ -47,13 +49,26 @@ class Population:
         """
         pass
 
-    def plot(self, save=False):
+    def plot(self, gaintype: str = None, color='b'):
         """
         Plot the indiviual
         if save=True saves it into src file
 
         """
-        pass
+        if gaintype == 'db':
+            gain = self.gaindb
+        elif gaintype == 'mag':
+            gain = self.gainmag
+        else:
+            raise ValueError(f"gaintype should be db or mag")
+
+        if color == 'alternate':
+            color = np.random.rand(3, )
+
+        plt.scatter(self.bw, gain, color=color)
+
+        plt.draw()
+        plt.pause(0.001)
 
     def simulate(self):
 
@@ -71,7 +86,6 @@ class Population:
             'start/min/wait C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' + circuit_name + '.sp -o ' + circuit_name)
 
         # read ma0 and parse gain, bw, himg, hreal, tmp
-
         self._read_ma0()
 
         # read ma0 and parse power, area, temper
@@ -89,15 +103,10 @@ class Population:
 
     def _write_param(self):
         """ Write parameters to param.cir file"""
-        with open('param.cir', 'r') as f:
-            lines = f.readlines()
-            headers = []
-            for line in lines[1:]:
-                headers.append(line.split(' ')[1])
 
         with open('param.cir', 'w') as f:
             f.write('.PARAM\n')
-            for header, parameter in zip(headers, self.parameters):
+            for header, parameter in zip(self.topology, self.parameters):
                 f.write('+ ' + header + ' = ' + str(parameter) + '\n')
 
     def _write_geo(self):
@@ -211,8 +220,3 @@ class Population:
     @staticmethod
     def mag2db(x):
         return control.mag2db(x)
-
-# if __name__ == '__main__':
-#     a = Population([1, 2, 3, 4, 5, 6])
-#     a.simulate()
-#     pass
