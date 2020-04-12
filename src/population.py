@@ -71,19 +71,21 @@ class Population:
         plt.pause(0.001)
 
     def simulate(self):
+        # cwd = os.getcwd()
+        # path = cwd + '\\CircuitFiles\\'
+        # os.chdir(path)
 
-        path = '../CircuitFiles/'
-        os.chdir(path)
+        os.chdir(r'.\CircuitFiles')
 
         # write Vth changes to geo.txt file
         self._write_geo()
 
-        # write paramaters to param file
+        # write parameters to param file
         self._write_param()
 
         # perform simulation
         os.system(
-            'start/min/wait C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' + circuit_name + '.sp -o ' + circuit_name)
+            r'start/min/wait C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' + circuit_name + '.sp -o ' + circuit_name)
 
         # read ma0 and parse gain, bw, himg, hreal, tmp
         self._read_ma0()
@@ -100,6 +102,8 @@ class Population:
             self.saturation = True
         else:
             self.saturation = False
+
+        os.chdir(r'..\\')
 
     def _write_param(self):
         """ Write parameters to param.cir file"""

@@ -1,5 +1,5 @@
 from CircuitFiles import gen_number, N
-from generation import Generations, Generation
+from src.generation import Generations, Generation
 
 kii = 1
 generations = Generations()  # form a generations object
@@ -9,7 +9,9 @@ generation = Generation(N)  # form a generation with N individuals
 generation.population_initialize()
 generation.simulate()
 generation.fitness_first()
-generation.enviromental_first()
+
+generation.archive_inds = generation.individuals
+
 generation.plot_scatter_arch(gaintype='mag', color='b', gen=kii)
 
 # append it to generations class
@@ -23,6 +25,7 @@ crossed_parameters = generation.cross_mutation(matingpool)
 generation = Generation.new_generation(crossed_parameters, N)
 
 while kii < gen_number:
+
     kii += 1
 
     generation.simulate()
@@ -31,8 +34,7 @@ while kii < gen_number:
         archive_rawfitness, archive_total_error = generation.fitness(generations.gens[-1], kii)
 
     generation.enviromental(generations.gens[-1], archive_fitness,
-                            archive_distance, archive_rawfitness,
-                            archive_total_error)
+                            archive_rawfitness, archive_total_error)
 
     generation.plot_scatter_arch(gaintype='mag', color='alternate', gen=kii)
 
@@ -40,3 +42,5 @@ while kii < gen_number:
     matingpool = generation.mating()
     crossed_parameters = generation.cross_mutation(matingpool)
     generation = Generation.new_generation(crossed_parameters, N)
+
+generations.save(0, 100)

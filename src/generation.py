@@ -11,7 +11,7 @@ from datetime import datetime
 from random import randrange, uniform
 
 from CircuitFiles import *
-from population import Population
+from .population import Population
 
 
 class Generation:
@@ -242,36 +242,8 @@ class Generation:
             ind.f_values['total_error'] = \
                 pm_error[i] + power_error[i] + area_error[i]
 
-    def enviromental_first(self):
-
-        for ind in self.individuals:
-            if ind.f_values['rawfitness'] == 0 and ind.f_values['total_error'] == 0:
-                self.archive_inds.append(ind)
-
-        sorted_inds = sorted(self.individuals,
-                             key=lambda x: x.f_values['fitness'])
-
-        while len(self.archive_inds) < N:
-            for ind in sorted_inds:
-                if ind not in self.archive_inds:
-                    self.archive_inds.append(ind)
-                # if ind.f_values['rawfitness'] > 0 and ind.f_values['total_error'] > 0:
-
     def enviromental(self, before_generation, archive_fitness,
-                     archive_distance, archive_rawfitness,
-                     archive_total_error):
-        # flag1 = [False] * N
-        # flag2 = [False] * N
-        #
-        # # Avoid duplication
-        # for i, ind in enumerate(self.individuals):
-        #     for j, arch_ind_before in enumerate(before_generation.archive_inds):
-        #         if ind.bw == arch_ind_before.bw and ind.gaindb == arch_ind_before.gaindb:
-        #             flag1[i] = True
-        #         if before_generation.archive_inds[i].bw == arch_ind_before.bw and \
-        #                 before_generation.archive_inds[i].gaindb == arch_ind_before.gaindb and \
-        #                 i != j:
-        #             flag2[i] = True
+                    archive_rawfitness, archive_total_error):
 
         archive_inds_temp = []
         for i, ind in enumerate(self.individuals):
@@ -302,45 +274,24 @@ class Generation:
         if len(archive_inds_temp) < N:
 
             i = 0
-            # try:
             while len(archive_inds_temp) < N:
                 if indexes[i] < N:
-                    # if not flag1[indexes[i]]:
                     if self.individuals[indexes[i]] not in archive_inds_temp:
                         archive_inds_temp.append(self.individuals[indexes[i]])
                 else:
-                    # if not flag2[indexes[i] - N]:
                     if before_generation.archive_inds[indexes[i] - N] not in archive_inds_temp:
                         archive_inds_temp.append(
                             before_generation.archive_inds[indexes[i] - N])
                 i += 1
-            # except IndexError:
-            #     i = 0
-            #     while len(archive_inds_temp) < N:
-            #         if indexes[i] < N:
-            #             if not flag1[indexes[i]] and self.individuals[indexes[i]] not in archive_inds_temp:
-            #                 archive_inds_temp.append(self.individuals[indexes[i]])
-            #         else:
-            #             if not flag2[indexes[i] - N] and \
-            #                     before_generation.archive_inds[indexes[i] - N] not in archive_inds_temp:
-            #                 archive_inds_temp.append(
-            #                     before_generation.archive_inds[indexes[i] - N])
-            #         i += 1
 
             self.archive_inds = archive_inds_temp[:]
 
         elif len(archive_inds_temp) > N:
             while len(archive_inds_temp) > N:
                 del archive_inds_temp[-1]
-            # self.truncate()
             self.archive_inds = archive_inds_temp[:]
         else:
             self.archive_inds = archive_inds_temp[:]
-
-
-    def truncate(self):
-        pass
-
 
     def mating(self):
 
@@ -434,51 +385,57 @@ class Generations:
             self.all_inds.append(ind)
             if ind.saturation:
                 self.saturation_inds.append(ind)
-        #
-        # if len(self.gens) == 1:
-        #     self.archive_parameters.append([ind.parameters
-        #                                     for ind in generation.archive_inds])
-        #     self.archive_bw.append([ind.bw
-        #                             for ind in generation.archive_inds])
-        #     self.archive_gaindb.append([ind.gaindb
-        #                                 for ind in generation.archive_inds])
-        #     self.archive_gainmag.append([ind.gainmag
-        #                                  for ind in generation.archive_inds])
-        #     self.archive_pm.append([ind.pm
-        #                             for ind in generation.archive_inds])
-        #     self.archive_power.append([ind.power
-        #                                for ind in generation.archive_inds])
-        #     self.archive_area.append([ind.area
-        #                               for ind in generation.archive_inds])
-        #     self.archive_fitness.append([ind.f_values['fitness']
-        #                                  for ind in generation.archive_inds])
-        #     self.archive_rawfitness.append([ind.f_values['rawfitness']
-        #                                     for ind in generation.archive_inds])
-        #     self.archive_total_error.append([ind.f_values['total_error']
-        #                                      for ind in generation.archive_inds])
 
-    def plot(self, start, stop):
-        pass
+        self.archive_parameters.append([ind.parameters
+                                        for ind in generation.archive_inds])
+        self.archive_bw.append([ind.bw
+                                for ind in generation.archive_inds])
+        self.archive_gaindb.append([ind.gaindb
+                                    for ind in generation.archive_inds])
+        self.archive_gainmag.append([ind.gainmag
+                                     for ind in generation.archive_inds])
+        self.archive_pm.append([ind.pm
+                                for ind in generation.archive_inds])
+        self.archive_power.append([ind.power
+                                   for ind in generation.archive_inds])
+        self.archive_area.append([ind.area
+                                  for ind in generation.archive_inds])
+        self.archive_fitness.append([ind.f_values['fitness']
+                                     for ind in generation.archive_inds])
+        self.archive_rawfitness.append([ind.f_values['rawfitness']
+                                        for ind in generation.archive_inds])
+        self.archive_total_error.append([ind.f_values['total_error']
+                                         for ind in generation.archive_inds])
+
+    def plot(self, start, stop, gaintype: str = None, color='b'):
+
+        gens = self.gens[start:stop+1]
+        i = start
+        for gen in gens:
+            gen.plot_scatter_arch(gaintype=gaintype, color=color, gen=i)
+            i += 1
 
     def save(self, start: int,
              stop: int, file_name=None):
+
         if not file_name:
             today = datetime.now()
-            file_name = today.strftime("%Y-%m-%d/%H:%M")
-            file_name += 'gen:' + str(start) + ':' + str(stop)
+            file_name = today.strftime(circuit_name + " d-%Y.%m.%d h-%H.%M ")
+            file_name += 'gen-' + str(start) + '-' + str(stop)
         else:
             if not isinstance(file_name, str):
                 raise TypeError(f"File name should be in str type"
                                 f"but given {type(file_name)}")
-        os.chdir('../data')
+        os.chdir('./data')
 
         if not isinstance(start, int) or not isinstance(stop, int):
             raise TypeError(f"Stop or start indexes should be"
                             f"integer type")
-        if start < stop:
-            raise ValueError(f"Stop index can not be higher"
-                             f"than start index")
+        if start > stop:
+            raise ValueError(f"Start index can not be higher"
+                             f"than stop index")
         else:
-            with open(file_name, 'w') as f:
-                data = self.gens[start:stop + 1]
-                pickle.dumps(data, f)
+            with open(file_name, 'wb') as f:
+                pickle.dump(self, f)
+
+        os.chdir(r'..\\')
