@@ -1,4 +1,4 @@
 DATA1 SOURCE='HSPICERF' VERSION='A-2008.03'
 .TITLE '**aaaa'
  avgpower offset rsarea tdlay zzztemp temper alter#
-  9.530929e-004	  1.850230e-003	  3.077403e-010	  9.643929e-010	  5.981498e-001	     25.000000 1
+  6.929205e-004	  1.304256e-003	  2.644842e-010	  6.372246e-010	  6.013043e-001	     25.000000 1

@@ -1,7 +1,7 @@
 # from CircuitFiles import gen_number, N
 
 from src.generation import Generations, Generation
-from mains import N, gen_number
+from main import N, gen_number
 
 kii = 1
 generations = Generations()  # form a generations object

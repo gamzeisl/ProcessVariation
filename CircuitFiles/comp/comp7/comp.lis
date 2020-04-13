@@ -11,7 +11,7 @@ hspicerf 32-bit version A-2008.03 (Feb 26 2008 14:57:57)
 
 machine info: Professional Server 4.0 (Build 9200) 586 on OGULCAN
 
-current time: 01:43:17 04/14/2020
+current time: 02:11:53 04/14/2020
 
 command line: hspicerf comp.sp -o comp
 
@@ -19,7 +19,7 @@ Total number of lines parsed: 397
 
 Resource Usage for Parsing
 --------------------------
-| CPU Time    | 0.02 sec |
+| CPU Time    | 0.01 sec |
 | Peak Memory | 0.03 Mb  |
 |------------------------|
 
@@ -99,50 +99,50 @@ Resource Usage for Operating Point
 
 Transient Analysis
 10.0% time = 10.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=751 evl=399 rej=15 mem=0 cpu=0 wall=0 )
+( slv=712 evl=335 rej=7 mem=0 cpu=0 wall=0 )
 20.0% time = 20.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=1434 evl=745 rej=29 mem=0 cpu=0 wall=0 )
+( slv=1660 evl=946 rej=14 mem=0 cpu=0 wall=0 )
 30.0% time = 30.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=2255 evl=1186 rej=39 mem=0 cpu=0 wall=0 )
+( slv=2638 evl=1527 rej=26 mem=0 cpu=0 wall=0 )
 40.0% time = 40.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=3002 evl=1584 rej=52 mem=0 cpu=0 wall=0 )
+( slv=3516 evl=2025 rej=34 mem=0 cpu=0 wall=0 )
 50.0% time = 50.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=3777 evl=1960 rej=67 mem=0 cpu=0 wall=0 )
+( slv=4367 evl=2440 rej=39 mem=0 cpu=0 wall=0 )
 60.0% time = 60.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=4620 evl=2373 rej=81 mem=0 cpu=0 wall=0 )
+( slv=5498 evl=3062 rej=51 mem=0 cpu=0 wall=0 )
 70.0% time = 70.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=5446 evl=2815 rej=93 mem=0 cpu=0 wall=0 )
+( slv=6386 evl=3520 rej=63 mem=0 cpu=0 wall=0 )
 80.0% time = 80.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=6127 evl=3160 rej=105 mem=0 cpu=0 wall=0 )
+( slv=7176 evl=3937 rej=72 mem=0 cpu=0 wall=0 )
 90.0% time = 90.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=6849 evl=3541 rej=118 mem=0 cpu=0 wall=0 )
+( slv=7872 evl=4289 rej=79 mem=0 cpu=0 wall=0 )
 100.0% time = 100.0 ns ( etc = 0.0 sec, ett = 0.0 sec )
-( slv=7804 evl=4171 rej=129 mem=0 cpu=0 wall=0 )
+( slv=8660 evl=4713 rej=87 mem=0 cpu=0 wall=0 )
 
-solve = 7804 eval = 4171 reject = 129
+solve = 8660 eval = 4713 reject = 87
 ******
 ***
 ****** transient analysis temp= 25
 ******
-avgpower= 7.956809e-004 from= 0.000e+000 to= 1.000e-007
-offset= 2.076111e-003 from= 0.000e+000 to= 1.000e-007
-rsarea= 3.194626e-010 from= 0.000e+000 to= 1.000e-007
-tdlay= 6.416084e-010 targ= 4.517e-008 trig= 4.453e-008
-zzztemp= 5.979239e-001 when/at=4.481e-008
+avgpower= 6.854957e-004 from= 0.000e+000 to= 1.000e-007
+offset= 2.849593e-004 from= 0.000e+000 to= 1.000e-007
+rsarea= 2.273887e-010 from= 0.000e+000 to= 1.000e-007
+tdlay= 8.130505e-010 targ= 4.967e-008 trig= 4.886e-008
+zzztemp= 5.997150e-001 when/at=4.929e-008
 
 
 
-Transient time = 0.681 cpu sec, 0 wall sec
+Transient time = 0.558 cpu sec, 0 wall sec
 
 Resource Usage for Transient Analysis
 --------------------------
-| CPU Time    | 0.70 sec |
+| CPU Time    | 0.56 sec |
 | Peak Memory | 0.00 Mb  |
 |------------------------|
 
 --- hspicerf done [comp.sp] ---
 
-Total time = 0.72 cpu sec
+Total time = 0.57 cpu sec
 
 Total memory = 0.00 Mbytes
 

@@ -13,7 +13,7 @@ from datetime import datetime
 from random import randrange, uniform
 
 from .population import Population
-from mains import circuit_name, constraints, normalize, targets
+from main import circuit_name, constraints, normalize, targets
 
 circuit_module_path = "CircuitFiles." + circuit_name
 

@@ -4,9 +4,7 @@ import control
 import importlib
 
 from matplotlib import pyplot as plt
-from mains import circuit_name, N, targets
-
-# from CircuitFiles import *
+from main import circuit_name, N, targets
 
 circuit_module_path = "CircuitFiles." + circuit_name
 
