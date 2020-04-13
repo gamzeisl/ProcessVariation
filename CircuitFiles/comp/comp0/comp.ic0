@@ -1,0 +1,27 @@
+* "simulator" "HSPICERF"
+* "version" "A-2008.03"
+* "format" "HSP"
+* "rundate" "01:43:17  04/14/2020"
+* "netlist" "comp.sp"
+* "runtitle" "**aaaa"
+* time = 0
+* temperature = 25
+*** BEGIN: Saved Operating Point ***
+.option
++ gmindc= 1e-012
+.nodeset
++ 1 = 580.0000000000m
++ 2 = 402.8958076618n
++ 3 = 380.2740354712n
++ 4 = 0.0000000000
++ 5 = 1.1999982184
++ 6 = 1.1999982184
++ 7 = 1.2000000000
++ 8 = 1.1999999998
++ 9 = 1.1999999998
++ 10 = 322.6029275906n
++ 11 = 929.9026533505n
++ 12 = 712.8122936496n
++ 13 = 1.1999961545
++ 14 = 600.0000000000m
+*** END: Saved Operating Point ***

@@ -1,5 +1,7 @@
-from CircuitFiles import gen_number, N
+# from CircuitFiles import gen_number, N
+
 from src.generation import Generations, Generation
+from mains import N, gen_number
 
 kii = 1
 generations = Generations()  # form a generations object
@@ -7,7 +9,7 @@ generation = Generation(N)  # form a generation with N individuals
 
 # initialize the first generation
 generation.population_initialize()
-generation.simulate()
+generation.simulate(multithread=8)
 generation.fitness_first()
 
 generation.archive_inds = generation.individuals
@@ -28,7 +30,7 @@ while kii < gen_number:
 
     kii += 1
 
-    generation.simulate()
+    generation.simulate(multithread=8)
 
     archive_fitness, archive_distance, \
         archive_rawfitness, archive_total_error = generation.fitness(generations.gens[-1], kii)
